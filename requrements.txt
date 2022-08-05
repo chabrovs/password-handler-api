@@ -1,0 +1,7 @@
+# requrements.txt
+autopep8
+asgiref
+rsa
+pandas
+requests
+numpy
