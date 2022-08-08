@@ -118,7 +118,7 @@ class Save_to_file(Generate, Cryptography):
 
         return False
 
-    def save_records_to_csv(self, name: str, unique_name_field=True) -> None:
+    def save_records_to_csv(self, name: str, unique_name_field=False) -> None:
         if unique_name_field:
             data = self.read_records_from_csv()
             for name_field in data.items():
@@ -137,8 +137,20 @@ class Save_to_file(Generate, Cryptography):
 
                 file.close()
         else:
-            raise Exception(
-                ('Please, set the "unique_name_field" attribute of "save_records_to_csv" function to "True"'))
+            name = str(name).lower()
+            value = base64.b64encode(self.encrypt(
+                self.generate_password().encode('utf8'))).decode()
+            values = [name, value]
+            with open(self._filename, 'a', newline='') as file:
+                writer = csv.writer(file)
+                if self.is_empty():
+                    writer.writerow(self._field_names)
+                else:
+                    writer.writerow(values)
+
+                file.close()
+            # raise Exception(
+                # ('Please, set the "unique_name_field" attribute of "save_records_to_csv" function to "True"'))
 
     def read_records_from_csv(self) -> dict[str, str]:
         data = {}
@@ -243,14 +255,14 @@ def main():
             for key, value in DESCRIPTION.items():
                 print(key, value)
     else:
-        save_to_file.save_records_to_csv()
+        save_to_file.save_records_to_csv(name=str(input("name: ")))
 
 
-# Not used with API
-# if __name__ == "__main__":
-#     try:
-#         # main()
-#         # api_requests_handler(['-r'])
-#         pass
-#     except (KeyboardInterrupt, SystemExit):
-#         pass
+if __name__ == "__main__":
+    print(f"{os.path.basename(__file__)} started as an independent program. Name {__name__}")
+    try:
+        main()
+    except (KeyboardInterrupt, SystemExit):
+        pass
+else:
+    print(f"{os.path.basename(__file__)} started as a API. Name: {__name__}")
