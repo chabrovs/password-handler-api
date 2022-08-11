@@ -119,6 +119,7 @@ class Save_to_file(Generate, Cryptography):
         return False
 
     def save_records_to_csv(self, name: str, unique_name_field=False) -> None:
+        # FIXME
         if unique_name_field:
             data = self.read_records_from_csv()
             for name_field in data.items():
