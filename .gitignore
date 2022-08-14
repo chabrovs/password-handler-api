@@ -1,5 +1,0 @@
-# Ignore virtual enviroment (venv)
-venv
-/venv
-public_key.pem
-private_key.pem
