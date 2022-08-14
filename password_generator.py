@@ -103,6 +103,22 @@ class Cryptography:
     def decrypt(self, encrypted_message: bytes) -> str:
         return rsa.decrypt(encrypted_message, self.read_private_key())
 
+    def do_keys_exist(self) -> bool:
+        "Check if keys already exist"
+        public_existence = os.path.exists(self._public_key_filename)
+        private_existence = os.path.exists(self._private_key_filename)
+        if public_existence and private_existence:
+            return True
+        elif not public_existence:
+            print("Public key doesn't exists")
+            return False
+        elif not private_existence:
+            print("Private key doesn't exits")
+        else:
+            print("Unknown key existence error")
+            return False
+        return False
+
 
 class Save_to_file(Generate, Cryptography):
     _field_names = ['name', 'password']
@@ -135,7 +151,6 @@ class Save_to_file(Generate, Cryptography):
                     writer.writerow(self._field_names)
                 else:
                     writer.writerow(values)
-
                 file.close()
         else:
             name = str(name).lower()
@@ -206,7 +221,7 @@ class APIRequestsHandler(Save_to_file):
     def api_generate_new_keys(self, safe=True) -> None:
         "Generated new RSA encryption keys via safe generation method"
         if safe:
-            if os.path.isfile(self._cwd + '\\' + self._public_key_filename) or os.path.isfile(self._cwd + '\\' + self._private_key_filename):
+            if self.do_keys_exist():
                 print("""
                     Attention!\n Keys are already exist!
                     \n Before generation new keys, make sure to save existing keys. Otherwise, you can lose access to yours' encrypted passwords!\n""")
@@ -218,8 +233,6 @@ class APIRequestsHandler(Save_to_file):
                     raise KeyboardInterrupt
             else:
                 self.generate_keys()
-
-        return self.generate_keys()
 
 
 def main():
