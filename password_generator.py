@@ -110,7 +110,7 @@ class Cryptography:
         if public_existence and private_existence:
             return True
         elif not public_existence:
-            print("Public key doesn't exists ")
+            print("Public key doesn't exists")
             return False
         elif not private_existence:
             print("Private key doesn't exits")
