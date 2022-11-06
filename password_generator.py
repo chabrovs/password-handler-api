@@ -25,7 +25,6 @@ DESCRIPTION = {
 class DebugUtils:
     def timer(self, func_name: str):
         """Decorator to measure functions runtime"""
-
         def outer(func):
             def wrapper(*args, **kwargs):
                 started = datetime.now()
