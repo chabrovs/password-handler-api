@@ -1,13 +1,15 @@
 import csv
 import os
 import sys
-from typing import Dict, Any
+from typing import Dict, Any, Tuple
 
 import rsa
 import base64
 import pandas as pd
 import numpy as np
 from datetime import datetime
+
+from rsa import PublicKey, PrivateKey
 
 DESCRIPTION = {
     '': 'Password handler. Encrypts and stored password in CSV file.',
@@ -89,9 +91,9 @@ class Cryptography:
         return wrapper
 
     @save_keys
-    def generate_keys(self) -> tuple[bytes, bytes]:
+    def generate_keys(self) -> tuple[PublicKey, PrivateKey]:
         (public_key, private_key) = rsa.newkeys(512)
-        return (public_key, private_key)
+        return public_key, private_key
 
     def read_public_key(self) -> rsa.PublicKey:
         with open(self._public_key_filename, 'rb') as public_file:
@@ -106,7 +108,7 @@ class Cryptography:
     def encrypt(self, message: str) -> bytes:
         return rsa.encrypt(message, self.read_public_key())
 
-    def decrypt(self, encrypted_message: bytes) -> str:
+    def decrypt(self, encrypted_message: bytes) -> bytes:
         return rsa.decrypt(encrypted_message, self.read_private_key())
 
     @property
@@ -136,11 +138,19 @@ class Save_to_file(Generate, Cryptography):
         self.__cwd = os.getcwd()
 
     def is_empty(self) -> bool:
-        """Checks if passwords.csv in the directory or not"""
+        """Checks if passwords.csv generated for the first time"""
         if os.path.getsize(self.__cwd + '\\' + self._filename) == 0:
             return True
 
         return False
+
+    def does_password_csv_exist(self):
+        """Checks if the data storage exists in the directory"""
+        if os.path.exists(self.__cwd + '\\' + self._filename):
+            return True
+        else:
+            f = open(self._filename, 'x')
+            f.close()
 
     def save_records_to_csv(self, name: str, unique_name_field=True) -> None:
         """
@@ -148,6 +158,13 @@ class Save_to_file(Generate, Cryptography):
         keys with the same name.
         """
         # FIXMED
+        self.does_password_csv_exist()
+
+        if self.is_empty():
+            with open(self._filename, 'a', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(self._field_names)
+
         if unique_name_field:
             @staticmethod
             def check_if_name_exist(name: str) -> int:
@@ -180,11 +197,7 @@ class Save_to_file(Generate, Cryptography):
             values = [name, value]
             with open(self._filename, 'a', newline='') as file:
                 writer = csv.writer(file)
-                if self.is_empty():
-                    writer.writerow(self._field_names)
-                    writer.writerow(values)
-                else:
-                    writer.writerow(values)
+                writer.writerow(values)
                 file.close()
         else:
             name = str(name).lower()
