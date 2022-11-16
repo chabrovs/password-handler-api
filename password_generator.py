@@ -13,9 +13,10 @@ from rsa import PublicKey, PrivateKey
 
 DESCRIPTION = {
     '': 'Password handler. Encrypts and stored password in CSV file.',
-    '-r': ' Read all data from csv file',
+    '-a': ' Read all data from csv file',
     '-f name': ' Return decrypted password. (Example: -f google.com)',
     '-g': ' Generate keys',
+    '-r': ' To remove the row',
     '-pub_key': ' Show public key',
     '-priv_key': ' Show private key',
     '?': ' For help'
@@ -25,6 +26,7 @@ DESCRIPTION = {
 class DebugUtils:
     def timer(self, func_name: str):
         """Decorator to measure functions runtime"""
+
         def outer(func):
             def wrapper(*args, **kwargs):
                 started = datetime.now()
@@ -156,7 +158,7 @@ class Save_to_file(Generate, Cryptography):
         The unique_name_field setting must always be True, because python3 dictionary does not support two or more
         keys with the same name.
         """
-        # FIXMED
+        # FIXED
         self.does_password_csv_exist()
 
         if self.is_empty():
@@ -176,8 +178,11 @@ class Save_to_file(Generate, Cryptography):
                     reader = csv.reader(file, delimiter=',',
                                         quotechar='|', doublequote=False, escapechar='')
                     for row in reader:
-                        if name in row[0]:
-                            same_names.append(row)
+                        try:
+                            if name in row[0]:
+                                same_names.append(row)
+                        except IndexError:
+                            pass
 
                 return len(same_names)
 
@@ -219,7 +224,10 @@ class Save_to_file(Generate, Cryptography):
             reader = csv.reader(file, delimiter=',',
                                 quotechar='|', doublequote=False, escapechar='')
             for row in reader:
-                data[row[0]] = row[1]
+                try:
+                    data[row[0]] = row[1]
+                except IndexError:
+                    pass
             file.close()
         return data
 
@@ -234,12 +242,19 @@ class Save_to_file(Generate, Cryptography):
     def read_csv_pandas(self) -> pd.DataFrame:
         return pd.read_csv(self._filename)
 
-    def delete_row_from_csv(self, name):
-        df = self.read_csv_pandas()
-        df.dropna(inplace=True)
-        a = df["Indexes"] = df["Name"].str.find(name)
-        print(a)
-        # print(df.loc[df['name'].str.contains(name)])
+    def delete_row_from_csv(self, name: str) -> None:
+        # FIXED
+        csv_records = list()
+        with open(self._filename, 'r', newline='') as file:
+            reader = csv.reader(file, delimiter=',', quotechar='|', doublequote=False, escapechar='')
+            for row in reader:
+                csv_records.append(row)
+                for field in row:
+                    if field == name:
+                        csv_records.remove(row)
+        with open(self._filename, 'w') as writeFile:
+            writer = csv.writer(writeFile)
+            writer.writerows(csv_records)
 
 
 class APIRequestsHandler(Save_to_file):
@@ -265,13 +280,16 @@ class APIRequestsHandler(Save_to_file):
         """Return public key from 'public_key.pem' in bytes | str"""
         return str(self.read_public_key())
 
+    def api_delete_row(self, name: str) -> None:
+        """Deletes row from records.csv. Deletes password name and encrypted password as well ([0], [1])"""
+        return self.delete_row_from_csv(str(name).lower())
+
     def api_generate_new_keys(self, safe=True) -> None:
         """Generated new RSA encryption keys via safe generation method"""
         if safe:
             if self.do_keys_exist:
-                print("""
-                    Attention!\n Keys are already exist!
-                    \n Before generation new keys, make sure to save existing keys. Otherwise, you can lose access to yours' encrypted passwords!\n""")
+                print("""Attention!\n Keys are already exist! \n Before generation new keys, make sure to save 
+                existing keys. Otherwise, you can lose access to yours' encrypted passwords!\n""")
                 decision = str(
                     input("'Y' to generate new keys or 'N' to exit: ")).upper()
                 if decision == 'Y':
@@ -285,16 +303,15 @@ class APIRequestsHandler(Save_to_file):
 def main():
     save_to_file = Save_to_file()
     if len(sys.argv) > 1:
-        if '-r' in sys.argv:
+        if '-a' in sys.argv:
             print(save_to_file.read_records_from_csv())
         elif '-g' in sys.argv[1]:
             # Safe key generation
             cryptography = Cryptography()
             if os.path.isfile(cryptography._cwd + '\\' + cryptography._public_key_filename) or os.path.isfile(
                     cryptography._cwd + '\\' + cryptography._private_key_filename):
-                print("""
-                Attention!\n Keys are already exist!
-                \n Before generation new keys, make sure to save existing keys. Otherwise, you can lose access to yours' encrypted passwords!\n""")
+                print("""Attention!\n Keys are already exist! \n Before generation new keys, make sure to save 
+                existing keys. Otherwise, you can lose access to yours' encrypted passwords!\n""")
                 decision = str(
                     input("'Y' to generate new keys or 'N' to exit: ")).upper()
                 if decision == 'Y':
@@ -305,7 +322,7 @@ def main():
                 cryptography.generate_keys()
         elif '-f' in sys.argv[1]:
             print(save_to_file.show_password(sys.argv[2].lower()))
-        elif '-d' in sys.argv[1]:
+        elif '-r' in sys.argv[1]:
             save_to_file.delete_row_from_csv(sys.argv[2].lower())
         elif '-pub_key' in sys.argv[1]:
             cryptography = Cryptography()
@@ -327,4 +344,5 @@ if __name__ == "__main__":
     except (KeyboardInterrupt, SystemExit):
         pass
 else:
+    apiRequestsHandler = APIRequestsHandler()
     print(f"{os.path.basename(__file__)} started as a API. Name: {__name__}")

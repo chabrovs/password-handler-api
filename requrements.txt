@@ -1,6 +1,4 @@
 # requrements.txt
-autopep8
 rsa
 pandas
-requests
 numpy
