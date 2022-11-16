@@ -27,7 +27,6 @@ api_generate_password_for(name: str) -> None | Generates and saves password to c
 api_find_password(name: str) -> dict[Any, Any] (str) | It Looks for the password. In a successful case, it returns the decrypted password.
 api_get_public_key() -> str | It returns public key from ‘publick_key.pem’ in bytes | str
 api_generate_new_keys(safe=True) -> None | It generates new RSA encryption keys.  
-api_delete_row(name: str) -> None | Deletes row from records.csv.
 
 ***use `python3 password_generator.py -?` for help***
 
