@@ -1,0 +1,17 @@
+# Virtual environment
+env/
+env
+/env
+
+# Keys
+private_key.pem
+public_key.pem
+
+# git
+.gitignore
+
+# IDEs
+.vscode
+.idea
+
+

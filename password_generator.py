@@ -22,6 +22,7 @@ DESCRIPTION = {
     '?': ' For help'
 }
 
+CURRENT_PLATFORM = sys.platform
 
 class DebugUtils:
     def timer(self, func_name: str):
@@ -83,13 +84,14 @@ class Cryptography:
                        (private_key.save_pkcs1(format='PEM'), args[0]._private_key_filename)]
 
             for key, filename in to_save:
-                with open(args[0]._cwd + '\\' + filename, 'wb') as f:
+                with open(args[0]._cwd + '/' + filename if 'linux' in CURRENT_PLATFORM else '\\' + filename, 'wb') as f:
                     f.write(key)
                 f.close()
 
             return results
 
         return wrapper
+
 
     @save_keys
     def generate_keys(self) -> tuple[PublicKey, PrivateKey]:
@@ -136,18 +138,18 @@ class Save_to_file(Generate, Cryptography):
     def __init__(self) -> None:
         super(Save_to_file, self).__init__()
         self._filename = 'passwords.csv'
-        self.__cwd = os.getcwd()
+        self._cwd = os.getcwd()
 
     def is_empty(self) -> bool:
         """Checks if passwords.csv generated for the first time"""
-        if os.path.getsize(self.__cwd + '\\' + self._filename) == 0:
+        if os.path.getsize(self._cwd + '/' if 'linux' in CURRENT_PLATFORM else '\\' + self._filename) == 0:
             return True
 
         return False
 
     def does_password_csv_exist(self):
         """Checks if the data storage exists in the directory"""
-        if os.path.exists(self.__cwd + '\\' + self._filename):
+        if os.path.exists(self._cwd + '/' if 'linux' in CURRENT_PLATFORM else '\\' + self._filename):
             return True
         else:
             f = open(self._filename, 'x')
@@ -308,8 +310,8 @@ def main():
         elif '-g' in sys.argv[1]:
             # Safe key generation
             cryptography = Cryptography()
-            if os.path.isfile(cryptography._cwd + '\\' + cryptography._public_key_filename) or os.path.isfile(
-                    cryptography._cwd + '\\' + cryptography._private_key_filename):
+            if os.path.isfile(cryptography._cwd + '/' if 'linux' in CURRENT_PLATFORM else '\\' + cryptography._public_key_filename) or os.path.isfile(
+                    cryptography._cwd + '/' if 'linux' in CURRENT_PLATFORM else '\\' + cryptography._private_key_filename):
                 print("""Attention!\n Keys are already exist! \n Before generation new keys, make sure to save 
                 existing keys. Otherwise, you can lose access to yours' encrypted passwords!\n""")
                 decision = str(
