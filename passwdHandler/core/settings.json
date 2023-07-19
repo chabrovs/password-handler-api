@@ -1,0 +1,32 @@
+{
+    "general": {
+        "Version": "2-0-0",
+        "encryption": {
+            "method": "RSA"
+        }
+    },
+    
+    "passwdGenerator": {
+        "ASCII": {
+            "lowercase": true,
+            "uppercase": true,
+            "numbers": true,
+            "symbols": true
+        }, 
+        "length": 10,
+        "replace": true
+    },
+
+    "keyGenerator": {
+        "keyLength": 512
+    },
+
+    "filenameGenerator": {
+        "suffixLength": 5
+    },
+
+    "byteConverter": {
+        "encode": "base64",
+        "decode": "base64"
+    }
+}
