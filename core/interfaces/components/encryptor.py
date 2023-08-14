@@ -7,7 +7,7 @@ class Encryption(ABC):
     def Encrypt() -> None:
         """Encrypts message."""
         ...
-
+        
 
 class Decryption(ABC):
     @abstractmethod
